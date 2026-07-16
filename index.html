@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PartMarineTest.ai - Gemi Makine Yönetim Dashboard'u</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden font-sans">
+
+    <!-- Ana Konteyner: Ekran boyutuna kilitli -->
+    <div class="flex h-screen w-screen overflow-hidden">
+        
+        <!-- Sol Menü (Sidebar) -->
+        <aside class="w-64 bg-slate-950 border-r border-slate-800 p-6 flex flex-col justify-between flex-shrink-0">
+            <div>
+                <div class="flex items-center gap-3 mb-8">
+                    <span class="p-2 bg-blue-600 rounded-lg text-white"><i class="fa-solid fa-ship text-xl"></i></span>
+                    <h1 class="text-lg font-bold tracking-wider text-blue-400">PartMarine<span class="text-white">.ai</span></h1>
+                </div>
+                <nav class="space-y-3">
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-medium transition"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-900 hover:text-white transition"><i class="fa-solid fa-sitemap"></i> Makine Soy Ağacı</a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-900 hover:text-white transition"><i class="fa-solid fa-brain"></i> AI Ömür Analizi</a>
+                </nav>
+            </div>
+            <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
+                Vessel: <span class="text-slate-300 font-semibold">Marguerite A</span>
+            </div>
+        </aside>
+
+        <!-- Sağ İçerik Alanı: overflow-hidden yaparak sayfa kaymasını engelledik -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden">
+            
+            <!-- Üst Bar (Topbar) -->
+            <header class="h-16 border-b border-slate-800 px-8 flex items-center justify-between bg-slate-900/50 backdrop-blur-md flex-shrink-0">
+                <div class="flex items-center gap-2 text-slate-400">
+                    <span>Gemi Bilgisi:</span>
+                    <span class="bg-blue-950 text-blue-400 px-3 py-1 rounded-full text-xs font-semibold border border-blue-800">Marguerite A (Dökme Yük)</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label for="excelFile" class="cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition shadow-lg shadow-emerald-900/20">
+                        <i class="fa-solid fa-file-excel"></i> Excel Dosyası Yükle
+                    </label>
+                    <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden">
+                    <button id="demoBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition">Demo Veri Yükle</button>
+                </div>
+            </header>
+
+            <!-- İçerik Alanı: flex-1 ve overflow-hidden ile ekran yüksekliğine tam sığdırdık -->
+            <div class="p-8 flex-1 flex flex-col gap-6 overflow-hidden">
+                
+                <!-- Üst Özet Kartları (Yükseklikleri sabit kalacak) -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 flex-shrink-0">
+                    <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+                        <div class="text-sm text-slate-400">Toplam Takip Edilen Parça</div>
+                        <div class="text-3xl font-bold mt-1" id="totalParts">0</div>
+                        <i class="fa-solid fa-gears absolute right-4 bottom-3 text-slate-900 text-5xl -z-0"></i>
+                    </div>
+                    <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+                        <div class="text-sm text-slate-400 text-red-400 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Kritik Durumda (AI)</div>
+                        <div class="text-3xl font-bold mt-1 text-red-500" id="criticalParts">0</div>
+                        <i class="fa-solid fa-triangle-exclamation absolute right-4 bottom-3 text-red-950/20 text-5xl -z-0"></i>
+                    </div>
+                    <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+                        <div class="text-sm text-slate-400">Ortalama Parça Ömrü</div>
+                        <div class="text-3xl font-bold mt-1" id="avgLifetime">0 Saat</div>
+                        <i class="fa-solid fa-hourglass-half absolute right-4 bottom-3 text-slate-900 text-5xl -z-0"></i>
+                    </div>
+                    <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+                        <div class="text-sm text-slate-400">Yapay Zeka Güven Skoru</div>
+                        <div class="text-3xl font-bold mt-1 text-blue-400">94.8%</div>
+                        <i class="fa-solid fa-brain absolute right-4 bottom-3 text-blue-950/20 text-5xl -z-0"></i>
+                    </div>
+                </div>
+
+                <!-- Alt Bölüm: Ekranın kalan tüm yüksekliğini kaplayan esnek Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 min-h-0 overflow-hidden">
+                    
+                    <!-- Sol Panel: Soy Ağacı (Kendi içinde scroll olur) -->
+                    <div class="lg:col-span-4 bg-slate-950 p-6 rounded-2xl border border-slate-800 flex flex-col h-full overflow-hidden">
+                        <h2 class="text-lg font-bold mb-1 flex items-center gap-2"><i class="fa-solid fa-sitemap text-blue-500"></i> Makine Dairesi Soy Ağacı</h2>
+                        <p class="text-xs text-slate-400 mb-4">Marguerite A ana ve yardımcı bileşen hiyerarşisi.</p>
+                        
+                        <div id="treeContainer" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                            <div class="text-slate-500 text-sm text-center mt-10">Lütfen Excel veya Demo Veri yükleyin.</div>
+                        </div>
+                    </div>
+
+                    <!-- Sağ Panel: Tablo Listesi (Kendi içinde scroll olur) -->
+                    <div class="lg:col-span-8 bg-slate-950 p-6 rounded-2xl border border-slate-800 flex flex-col h-full overflow-hidden">
+                        <div class="mb-4">
+                            <h2 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-list text-blue-500"></i> Parça Detayları ve AI Ömür Analizi</h2>
+                            <p class="text-xs text-slate-400">Sistemlerin çalışma saatleri ve kestirimci bakım tahminleri.</p>
+                        </div>
+                        
+                        <div class="flex-1 overflow-auto custom-scrollbar border border-slate-800 rounded-lg bg-slate-950">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-900 text-xs text-slate-400 uppercase tracking-wider sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-4 border-b border-slate-800">Parça Kodu</th>
+                                        <th class="p-4 border-b border-slate-800">Parça Adı</th>
+                                        <th class="p-4 border-b border-slate-800">Sistem (Üst Kategori)</th>
+                                        <th class="p-4 border-b border-slate-800">Çalışma Saati</th>
+                                        <th class="p-4 border-b border-slate-800">Ömür Sınırı</th>
+                                        <th class="p-4 border-b border-slate-800">Kalan Ömür % (AI)</th>
+                                        <th class="p-4 border-b border-slate-800">Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partsTableBody" class="text-sm divide-y divide-slate-800">
+                                    <tr>
+                                        <td colspan="7" class="p-8 text-center text-slate-500">Gösterilecek veri yok. Dosya yükleyin veya demo başlatın.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI Analiz Modalı -->
+    <div id="aiModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-slate-950 border border-slate-800 w-full max-w-lg p-6 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-blue-400 flex items-center gap-2"><i class="fa-solid fa-brain animate-pulse"></i> PartMarine AI Raporu</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3" id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
